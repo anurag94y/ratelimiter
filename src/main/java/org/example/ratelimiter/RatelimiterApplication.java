@@ -24,9 +24,10 @@ public class RatelimiterApplication {
         System.out.println(slidingWindow.allowRequest("U1", 30));
         System.out.println(slidingWindow.allowRequest("U1", 50));
         System.out.println(slidingWindow.allowRequest("U1", 61));
-        fixedSizeWindow = new FixedSizeWindow(3, 2);
-        fixedSizeWindow.setLimits("U1", 3, 2);
+        fixedSizeWindow = new FixedSizeWindow(3, 5);
+        fixedSizeWindow.setLimits("U1", 3, 5);
         for (int i = 0; i < 10; i++) {
+            System.out.println("fixedSizeWindow:" + i + " " + fixedSizeWindow.allowRequest("U1", i));
             System.out.println("fixedSizeWindow:" + i + " " + fixedSizeWindow.allowRequest("U1", i));
         }
     }

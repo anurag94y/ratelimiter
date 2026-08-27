@@ -6,15 +6,16 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
-public class SlidingWindow implements Algortihm {
+public class SlidingWindow implements Algorithm {
 
-    Map<String, Deque<Long>> userRequestMap ;
+    Map<String, Deque<Long>> userRequestMap;
     Map<String, UserConfig> userConfigMap;
 
     public SlidingWindow() {
-        this.userRequestMap = new HashMap<>();
-        this.userConfigMap = new HashMap<>();
+        this.userRequestMap = new ConcurrentHashMap<>();
+        this.userConfigMap = new ConcurrentHashMap<>();
     }
 
     public void setLimits(String userId, int windowSeconds, int maxRequests) {
@@ -26,22 +27,19 @@ public class SlidingWindow implements Algortihm {
         if (userConfig == null) {
             return false;
         }
-        Deque<Long> requests = userRequestMap.computeIfAbsent(userId, v -> new ArrayDeque<>());
-        if (requests.isEmpty()) {
-            requests.add(timestamp);
-            userRequestMap.put(userId, requests);
-            return true;
-        } else {
+
+        synchronized (userConfig) {
+            Deque<Long> requests = userRequestMap.computeIfAbsent(userId, v -> new ArrayDeque<>());
+
             long currentTimestamp = timestamp - userConfig.windowSeconds();
             while (!requests.isEmpty() && requests.peek() <= currentTimestamp) {
                 requests.poll();
             }
-            if (requests.size() < userConfig.maxRequests()) {
-                requests.add(timestamp);
-                userRequestMap.put(userId, requests);
-                return true;
+            if (requests.size() >= userConfig.maxRequests()) {
+                return false;
             }
+            requests.add(timestamp);
+            return true;
         }
-        return false;
     }
 }
